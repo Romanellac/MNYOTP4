@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from autograd import hessian #pip install autograd
 
 # Parámetros
 n = 5
@@ -7,6 +8,7 @@ d = 100
 
 # Generación de matriz A y vector b aleatorios
 np.random.seed(0)  # Para reproducibilidad
+#SEEDS QUE PROBAMOS:0, 1, 2, 3, 4
 A = np.random.randn(n, d)
 b = np.random.randn(n)
 
@@ -18,25 +20,30 @@ def F2(x, delta2):
     return 0.5 * np.linalg.norm(A @ x - b)**2 + 0.5 * delta2 * np.linalg.norm(x)**2
 
 # Gradientes
-def grad_F(x): # *** chequear si es así el gradiente,
+def grad_F(x):
     return A.T @ (A @ x - b)
 
-def grad_F2(x, delta2): # *** chequear si es así el gradiente, sobretodo lo de delta
+def grad_F2(x, delta2):
     return A.T @ (A @ x - b) + delta2 * x
 
-# Máximo valor propio de A^T A *** es así?
-lambda_max = np.linalg.norm(A.T @ A, 2)
+# Máximo valor lambda del hessiano
+hess_F = hessian(F)
+lambda_max_F = hess_F(A)
+hess_F2 = hessian(F2)
+lambda_max_F2 = hess_F2(A)
 
-# Valor máximo singular de A *** es así?
-sigma_max = np.linalg.norm(A, 2)
+# Valor máximo singular de A
+singular_values = np.linalg.svd(A, compute_uv=False)
+sigma_max = np.max(singular_values)
 
 # Parámetro de regularización
 delta2 = 10**-2 * sigma_max
 
 # Tamaño de paso
-s = 1 / lambda_max
+s_F = 1 / lambda_max_F
+s_F2 = 1 / lambda_max_F2
 
-# Inicialización aleatoria del vector x *** lo inicializo con cualquiera o desde el 00? no sé
+# Inicialización aleatoria del vector x 
 x0 = np.random.randn(d)
 
 # Gradiente descendente para minimizar F y F2 (Si delta2 es none usa solo F, sino usa F2! la versión con delta2)

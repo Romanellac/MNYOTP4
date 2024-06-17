@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from autograd import hessian #pip install autograd
+import sympy as sp
+
 
 # Parámetros
 n = 5
@@ -8,13 +9,17 @@ d = 100
 
 # Generación de matriz A y vector b aleatorios
 np.random.seed(0)  # Para reproducibilidad
-#SEEDS QUE PROBAMOS:0, 1, 2, 3, 4
+#SEEDS QUE PROBAMOS: 1, 2, 3, 4
 A = np.random.randn(n, d)
 b = np.random.randn(n)
 
 # Funciones de costo
 def F(x):
     return 0.5 * np.linalg.norm(A @ x - b)**2
+
+def hessian_F(A):
+    H = A.T @ A
+    return H
 
 def F2(x, delta2): 
     return 0.5 * np.linalg.norm(A @ x - b)**2 + 0.5 * delta2 * np.linalg.norm(x)**2
@@ -26,11 +31,14 @@ def grad_F(x):
 def grad_F2(x, delta2):
     return A.T @ (A @ x - b) + delta2 * x
 
-# Máximo valor lambda del hessiano
-hess_F = hessian(F)
-lambda_max_F = hess_F(A)
-hess_F2 = hessian(F2)
-lambda_max_F2 = hess_F2(A)
+# Inicialización aleatoria del vector x 
+x0 = np.random.randn(d)
+
+# Máximo valor lambda del hessiano *** Tengo que calcularlo para cada caso de x?
+H = hessian_F(A)
+autovalores = np.linalg.eigvals(H)
+print("AVAS: ", autovalores)
+lambda_max = np.argmax(autovalores)
 
 # Valor máximo singular de A
 singular_values = np.linalg.svd(A, compute_uv=False)
@@ -40,11 +48,14 @@ sigma_max = np.max(singular_values)
 delta2 = 10**-2 * sigma_max
 
 # Tamaño de paso
-s_F = 1 / lambda_max_F
-s_F2 = 1 / lambda_max_F2
+s = 1 / lambda_max
 
-# Inicialización aleatoria del vector x 
-x0 = np.random.randn(d)
+
+print("lambda_max: ", lambda_max)
+print("s: ", s)
+print("sigma_max: ", sigma_max)
+print("delta2: ", delta2)
+
 
 # Gradiente descendente para minimizar F y F2 (Si delta2 es none usa solo F, sino usa F2! la versión con delta2)
 def gradient_descent(grad_F, x0, s, iterations, delta2=None):
